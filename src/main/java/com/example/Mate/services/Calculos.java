@@ -20,17 +20,25 @@ public class Calculos {
             Function<Double, Double> funcion = (x) -> evaluarEcuacion(ecuacion.getEcuacion(),x);
             double a = ecuacion.getLimiteA();
             double b = ecuacion.getLimiteB();
-
             double tolerancia = 0.001;
+
+            Derivadas derivadas = new Derivadas();
+            derivadas.setFuncionADerivar(ecuacion.getEcuacion());
+            derivadas.derivar();
+
+            String ecuacionDerivada = derivadas.getFuncionDerivada();
+            Function<Double, Double> funcionDerivada = (x) -> evaluarEcuacion(ecuacionDerivada,x);
 
             ArrayList<MetodosNumericos> biseccion = biseccion(funcion, a, b, tolerancia);
             ArrayList<MetodosNumericos> falsaPosicion = falsaPosicion(funcion, a, b, tolerancia);
             ArrayList<MetodosNumericos> secante = secante(funcion, a, b, tolerancia);
+            ArrayList<MetodosNumericos> newtonRaphson = newtonRaphson(funcion, funcionDerivada, a, b, tolerancia, ecuacionDerivada);
 
             ArrayList<ArrayList<MetodosNumericos>> respuesta = new ArrayList<>();
             respuesta.add(biseccion);
             respuesta.add(falsaPosicion);
             respuesta.add(secante);
+            respuesta.add(newtonRaphson);
 
             return (respuesta);
 
@@ -130,6 +138,28 @@ public class Calculos {
         } while (error >= tolerancia);
 
         return secante;
+    }
+
+    public ArrayList<MetodosNumericos> newtonRaphson(Function<Double, Double> funcion, Function<Double, Double> derivada, double a, double b, double tolerancia, String derivadaString) {
+        double xi = a;
+        double xiMas;
+        double error = 0;
+
+        ArrayList<MetodosNumericos> newtonRaphson = new ArrayList<>();
+
+        do {
+            xiMas = xi - (funcion.apply(xi)/ derivada.apply(xi));
+
+            error = Math.abs((xiMas - xi)/xiMas);
+
+            NewtonRaphson newtonRaphson1 = new NewtonRaphson(xiMas,error,xi,xiMas,derivadaString);
+            newtonRaphson.add(newtonRaphson1);
+
+            xi = xiMas;
+
+        } while (error >= tolerancia);
+
+        return newtonRaphson;
     }
 
     public double evaluarEcuacion(String ecuacion, double x) {
